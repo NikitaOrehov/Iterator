@@ -11,12 +11,12 @@ template <class T>
 struct ListIterator{
     using iterator_category = std::forward_iterator_tag;
     using difference_type = std::ptrdiff_t;
-    using value_type = Node<T>;
-    using pointer = Node<T>*;
-    using reference = Node<T>&;
-    ListIterator(const pointer node): _node(node){};
-    const reference operator*()const{return *_node;}
-    const pointer operator->(){return _node;}
+    using value_type = T;
+    using pointer = T*;
+    using reference = T&;
+    ListIterator(Node<T>* node): _node(node){};
+    const reference operator*()const { return _node->data; }
+    const pointer operator->(){return &(_node->data);}
     ListIterator operator++(int){
         ListIterator tmp=*this;
         ++(*this);
@@ -34,7 +34,7 @@ struct ListIterator{
     }
 
 private:
-    pointer _node;
+    Node<T>* _node;
 };
 
 template <class T>
@@ -45,6 +45,7 @@ private:
 public:
     MyForwardList(){
         _head = nullptr;
+        _tail = nullptr;
     }
     
     void AddNode(T data) {
@@ -60,11 +61,35 @@ public:
     }
 
     void DeleteElem(T data){
-        auto tmp = begin();
-        while ((*tmp).next != nullptr || (*tmp).next->data != data){
-            tmp++;
+        if (empty()) return;
+        Node<T>* current = _head;
+        Node<T>* previous = nullptr;
+        while (current != nullptr){
+            if (current->data == data) {
+                Node<T>* tmp = current;
+                if (previous) previous->next = current->next;
+                else _head = _head->next;
+                if (current == _tail) {
+                    _tail = previous;
+                }
+                current = current->next;
+                delete tmp;
+                continue;
+            }
+            previous = current;
+            current = current->next;
         }
-        (*tmp).next = (*tmp).next->next;
+        return;
+    }
+
+    void DeleteElem(T* elems, size_t size) {
+        for (int i = 0; i < size; i++) {
+            DeleteElem(elems[i]);
+        }
+    }
+
+    bool empty() {
+        return !_head;
     }
 
     ListIterator<T> begin(){
@@ -75,10 +100,11 @@ public:
         return ListIterator<T>(nullptr);
     }
 
-    friend std::ostream& operator<<(const std::ostream& os, MyForwardList f){
+    friend std::ostream& operator<<(std::ostream& os, MyForwardList f){
         for (auto f: f){
-            std::cout<<f.data<<" ";
+            std::cout<<f<<" ";
         }
+        return os;
     }
 
 };
